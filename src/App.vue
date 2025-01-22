@@ -19,24 +19,32 @@
         </div>
         <div class="spe-aside__box">
           <label class="spe-label" for="scale">Scale</label>
-          <input id="scale" class="spe-input" type="number" min="0.1" step="0.1" v-model="options.scale">
+          <div class="spe-aside__group">
+            <button class="spe-button" @click="zoom(-0.1)">-</button>
+            <input id="scale" class="spe-input" type="number" min="0.1" step="0.01" v-model.number="options.scale">
+            <button class="spe-button" @click="zoom(0.1)">+</button>
+          </div>
         </div>
         <div class="spe-aside__box">
           <div class="spe-label">Translate</div>
           <div class="spe-aside__group">
             <div class="spe-aside__combo">
               <label class="spe-aside__combo-label" for="translateX">X:</label>
-              <input id="translateX" class="spe-input" type="number" v-model="options.translateX">
+              <button class="spe-button" @click="translate(-1, 0)">-</button>
+              <input id="translateX" class="spe-input" type="number" v-model.number="options.translateX">
+               <button class="spe-button" @click="translate(1, 0)">+</button>
             </div>
             <div class="spe-aside__combo">
               <label class="spe-aside__combo-label" for="translateY">Y:</label>
-              <input id="translateY" class="spe-input" type="number" v-model="options.translateY">
+               <button class="spe-button" @click="translate(0, -1)">-</button>
+              <input id="translateY" class="spe-input" type="number" v-model.number="options.translateY">
+              <button class="spe-button" @click="translate(0, 1)">+</button>
             </div>
           </div>
         </div>
         <div class="spe-aside__box">
           <label class="spe-label" for="rotate">Rotate</label>
-          <input id="rotate" class="spe-input" type="number" v-model="options.rotate">
+          <input id="rotate" class="spe-input" type="number" v-model.number="options.rotate">
         </div>
         <div class="spe-aside__box">
           <label class="spe-label" for="output">Output path</label>
@@ -114,6 +122,13 @@ export default {
         rotate: 0
       }
     },
+     zoom(amount) {
+      this.options.scale = Number((this.options.scale + amount).toFixed(2))
+    },
+      translate(x, y) {
+      this.options.translateX = Number((this.options.translateX + x).toFixed(2));
+      this.options.translateY = Number((this.options.translateY + y).toFixed(2));
+    },
     setCenterCoordinates() {
       const SVGRect = this.$refs.path.getBBox();
       this.centerX = SVGRect.width / 2 + SVGRect.x;
@@ -131,7 +146,7 @@ export default {
     options: {
       handler(options) {
         // Check options
-        if(options.scale < 0) options.scale = 1;
+        if(options.scale < 0.01) options.scale = 0.01;
         // Update path
         this.updatePath();
       },
@@ -209,9 +224,10 @@ input, textarea{
       }
       &__group{
         display: flex;
+        align-items: center;
         & > *{
           &:not(:first-child){
-            margin-left: 10px;
+            margin-left: 5px;
           }
         }
       }
@@ -321,5 +337,16 @@ input, textarea{
     font-size: 11px;
     color: #FF7F5B;
   }
+  &-button {
+      padding: 5px 10px;
+      background-color: rgba(#393939, 0.2);
+      border: none;
+      font-family: "Roboto Mono", sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      &:hover{
+          background-color: rgba(#393939, 0.3);
+      }
+    }
 }
 </style>
