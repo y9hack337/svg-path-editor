@@ -19,23 +19,26 @@
         </div>
         <div class="spe-aside__box">
           <label class="spe-label" for="scale">Scale</label>
-          <input id="scale" class="spe-input" type="number" min="0.1" step="0.1" v-model="options.scale">
-        </div>
-        <div class="spe-aside__box">
-          <div class="spe-label">Zoom</div>
-          <button @click="zoomIn" class="spe-button">Zoom In</button>
-          <button @click="zoomOut" class="spe-button">Zoom Out</button>
+          <div class="spe-aside__group">
+            <button class="spe-btn spe-btn--sm" @click="zoomIn">+</button>
+            <input id="scale" class="spe-input" type="number" min="0.1" step="0.01" v-model.number="options.scale">
+            <button class="spe-btn spe-btn--sm" @click="zoomOut">-</button>
+          </div>
         </div>
         <div class="spe-aside__box">
           <div class="spe-label">Translate</div>
           <div class="spe-aside__group">
             <div class="spe-aside__combo">
               <label class="spe-aside__combo-label" for="translateX">X:</label>
-              <input id="translateX" class="spe-input" type="number" step="0.5" v-model="options.translateX">
+              <button class="spe-btn spe-btn--sm" @click="moveLeft"><</button>
+              <input id="translateX" class="spe-input" type="number" v-model.number="options.translateX">
+              <button class="spe-btn spe-btn--sm" @click="moveRight">></button>
             </div>
             <div class="spe-aside__combo">
               <label class="spe-aside__combo-label" for="translateY">Y:</label>
-              <input id="translateY" class="spe-input" type="number" step="0.5" v-model="options.translateY">
+              <button class="spe-btn spe-btn--sm" @click="moveUp">↑</button>
+              <input id="translateY" class="spe-input" type="number" v-model.number="options.translateY">
+               <button class="spe-btn spe-btn--sm" @click="moveDown">↓</button>
             </div>
           </div>
         </div>
@@ -125,10 +128,25 @@ export default {
       this.centerY = SVGRect.height / 2 + SVGRect.y;
     },
     zoomIn() {
-      this.options.scale = +(this.options.scale + 0.1).toFixed(1);
+        this.options.scale += 0.05
+      },
+      zoomOut() {
+        this.options.scale -= 0.05
+         if (this.options.scale < 0.05){
+          this.options.scale = 0.05
+        }
+      },
+    moveLeft() {
+      this.options.translateX -= 5
     },
-    zoomOut() {
-      this.options.scale = Math.max(0.1, +(this.options.scale - 0.1).toFixed(1));
+    moveRight() {
+      this.options.translateX += 5
+    },
+    moveUp() {
+      this.options.translateY -= 5
+    },
+    moveDown() {
+      this.options.translateY += 5
     }
   },
   watch: {
@@ -142,7 +160,7 @@ export default {
     options: {
       handler(options) {
         // Check options
-        if(options.scale < 0) options.scale = 1;
+        if(options.scale < 0) options.scale = 0.05;
         // Update path
         this.updatePath();
       },
@@ -157,28 +175,12 @@ export default {
   }
 }
 </script>
+
 <style lang="scss">
 // Fonts
 @import url('https://fonts.googleapis.com/css?family=Roboto+Mono:400,500');
 @import url('https://fonts.googleapis.com/css?family=Roboto:400');
 
-
-/* Additional styles for buttons */
-.spe-button {
-  margin: 5px 0;
-  padding: 10px;
-  font-size: 14px;
-  color: #FFFCEF;
-  background-color: #393939;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-.spe-button:hover {
-  background-color: #555555;
-}
-  
 // Common
 *{
   box-sizing: border-box;
@@ -349,16 +351,17 @@ input, textarea{
     font-size: 11px;
     color: #FF7F5B;
   }
-  &-button {
-      padding: 5px 10px;
-      background-color: rgba(#393939, 0.2);
-      border: none;
-      font-family: "Roboto Mono", sans-serif;
-      font-size: 14px;
+  &-btn{
+     border: 1px solid rgba(#393939, 0.2);
+      background: transparent;
+      padding: 3px 5px;
       cursor: pointer;
-      &:hover{
-          background-color: rgba(#393939, 0.3);
-      }
+        &:active{
+          background: rgba(#393939, 0.2);
+        }
+    &--sm{
+      font-size: 11px;
     }
+  }
 }
 </style>
