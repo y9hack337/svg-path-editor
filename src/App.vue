@@ -8,10 +8,6 @@
           <div class="spe-toggle__btn"></div>
           <div class="spe-toggle__label">Show grid</div>
         </label>
-         <div class="spe-zoom-controls">
-          <button @click="zoom(0.1)">+</button>
-          <button @click="zoom(-0.1)">-</button>
-        </div>
       </div>
     </header>
     <section class="spe-main">
@@ -21,46 +17,60 @@
           <textarea id="input" class="spe-textarea" :class="{'spe-textarea--error': inputPathError}" v-model="inputPath"></textarea>
           <div class="spe-error" v-if="inputPathError">Path is not valid</div>
         </div>
+          <div class="spe-aside__box">
+          <label class="spe-label">Canvas Size</label>
+           <div class="spe-aside__group">
+              <div class="spe-aside__combo">
+                <label class="spe-aside__combo-label" for="canvasWidth">Width:</label>
+                <input id="canvasWidth" class="spe-input" type="number" v-model.number="canvasWidth">
+              </div>
+              <div class="spe-aside__combo">
+                 <label class="spe-aside__combo-label" for="canvasHeight">Height:</label>
+                <input id="canvasHeight" class="spe-input" type="number" v-model.number="canvasHeight">
+              </div>
+           </div>
+        </div>
         <div class="spe-aside__box">
           <label class="spe-label" for="scale">Scale</label>
-          <input id="scale" class="spe-input" type="number" min="0.1" step="0.01" v-model="options.scale">
+          <input id="scale" class="spe-input" type="number" min="0.1" step="0.1" v-model="options.scale">
         </div>
         <div class="spe-aside__box">
           <div class="spe-label">Translate</div>
           <div class="spe-aside__group">
             <div class="spe-aside__combo">
               <label class="spe-aside__combo-label" for="translateX">X:</label>
-              <input id="translateX" class="spe-input" type="number" step="0.1" v-model="options.translateX">
+              <input id="translateX" class="spe-input" type="number" v-model="options.translateX">
             </div>
             <div class="spe-aside__combo">
               <label class="spe-aside__combo-label" for="translateY">Y:</label>
-              <input id="translateY" class="spe-input" type="number" step="0.1" v-model="options.translateY">
+              <input id="translateY" class="spe-input" type="number" v-model="options.translateY">
             </div>
           </div>
         </div>
         <div class="spe-aside__box">
           <label class="spe-label" for="rotate">Rotate</label>
-          <input id="rotate" class="spe-input" type="number" step="0.1" v-model="options.rotate">
+          <input id="rotate" class="spe-input" type="number" v-model="options.rotate">
         </div>
         <div class="spe-aside__box">
           <label class="spe-label" for="output">Output path</label>
           <textarea id="output" class="spe-textarea" v-model="outputPath" onclick="this.focus();this.select()" readonly></textarea>
         </div>
       </aside>
-      <div class="spe-content" :style="{ transform: `scale(${zoomLevel})` }">
+      <div class="spe-content">
         <svg version="1.1"
           baseProfile="full"
-          width="100%" height="100%"
+          :width="svgWidth"
+          :height="svgHeight"
           xmlns="http://www.w3.org/2000/svg"
           class="spe-content__svg">
           <!-- Grid -->
           <defs>
-            <pattern id="smallGrid" width="10" height="10" patternUnits="userSpaceOnUse">
-              <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#393939" opacity="0.4" stroke-width="0.5"/>
+            <pattern id="smallGrid" :width="gridSize / 10" :height="gridSize / 10" patternUnits="userSpaceOnUse">
+              <path :d="`M ${gridSize / 10} 0 L 0 0 0 ${gridSize / 10}`" fill="none" stroke="#393939" opacity="0.4" stroke-width="0.5"/>
             </pattern>
-            <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
-              <rect width="100" height="100" fill="url(#smallGrid)"/>
-              <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#393939" opacity="0.4" stroke-width="1"/>
+             <pattern id="grid" :width="gridSize" :height="gridSize" patternUnits="userSpaceOnUse">
+              <rect :width="gridSize" :height="gridSize" fill="url(#smallGrid)"/>
+              <path :d="`M ${gridSize} 0 L 0 0 0 ${gridSize}`" fill="none" stroke="#393939" opacity="0.4" stroke-width="1"/>
             </pattern>
           </defs>
           <rect class="spe-content__svg-grid" :class="{'spe-content__svg-grid--visible': showGrid}" width="100%" height="100%" fill="url(#grid)" />
@@ -73,6 +83,7 @@
 </template>
 
 <script>
+// Docs: https://github.com/fontello/svgpath
 import svgpath from 'svgpath';
 
 export default {
@@ -88,10 +99,20 @@ export default {
         translateY: 0,
         rotate: 0
       },
+        canvasWidth: 400,
+        canvasHeight: 300,
       showGrid: true,
       centerX: 0,
       centerY: 0,
-      zoomLevel: 1
+      gridSize: 100
+    }
+  },
+  computed: {
+    svgWidth() {
+      return this.canvasWidth;
+    },
+    svgHeight() {
+      return this.canvasHeight;
     }
   },
   methods: {
@@ -99,9 +120,9 @@ export default {
       const newPath = svgpath(this.inputPath);
       if(!newPath.err && this.inputPath){
         this.outputPath = newPath
-                          .rotate(parseFloat(this.options.rotate) || 0, this.centerX, this.centerY)
-                          .scale(parseFloat(this.options.scale) || 1)
-                          .translate(parseFloat(this.options.translateX) || 0, parseFloat(this.options.translateY) || 0)
+                          .rotate(this.options.rotate || 0, this.centerX, this.centerY)
+                          .scale(Number(this.options.scale) || 1)
+                          .translate(Number(this.options.translateX) || 0, Number(this.options.translateY) || 0)
                           .rel()
                           .round(3)
                           .toString();
@@ -119,12 +140,11 @@ export default {
       }
     },
     setCenterCoordinates() {
-      const SVGRect = this.$refs.path.getBBox();
-      this.centerX = SVGRect.width / 2 + SVGRect.x;
-      this.centerY = SVGRect.height / 2 + SVGRect.y;
-    },
-    zoom(factor) {
-      this.zoomLevel += factor;
+      if (this.$refs.path) {
+          const SVGRect = this.$refs.path.getBBox();
+          this.centerX = SVGRect.width / 2 + SVGRect.x;
+          this.centerY = SVGRect.height / 2 + SVGRect.y;
+        }
     }
   },
   watch: {
@@ -137,10 +157,18 @@ export default {
     },
     options: {
       handler(options) {
+        // Check options
         if(options.scale < 0) options.scale = 1;
+        // Update path
         this.updatePath();
       },
       deep: true
+    },
+    canvasWidth() {
+      this.setCenterCoordinates()
+    },
+    canvasHeight() {
+      this.setCenterCoordinates()
     }
   },
   mounted() {
@@ -151,13 +179,184 @@ export default {
   }
 }
 </script>
-<style scoped lang="scss">
-/* ... (previous styles) ... */
-.spe-zoom-controls {
-  display: inline-flex;
-  button {
-    margin-left: 5px;
-  }
+
+<style lang="scss">
+// Fonts
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono:400,500');
+@import url('https://fonts.googleapis.com/css?family=Roboto:400');
+
+// Common
+*{
+  box-sizing: border-box;
+}
+body{
+  padding: 0;
+  margin: 0;
+  background: #FFFCEF;
+  font-family: 'Roboto', sans-serif;
+  color: #393939;
+}
+input, textarea{
+  min-width: 0;
+  font-family: 'Roboto Mono', sans-serif;
+  font-size: 13px;
+  color: #393939;
 }
 
+.spe{
+  // Header
+  &-header{
+    display: flex;
+    align-items: center;
+    height: 50px;
+    border-bottom: 1px solid rgba(#393939, 0.2);
+  }
+    &-heading{
+      width: 280px;
+      margin: 0;
+      padding: 15px;
+      font-family: "Roboto Mono", sans-serif;
+      font-weight: 500;
+      font-size: 16px;
+      line-height: 20px;
+    }
+    &-controls{
+      padding: 10px;
+    }
+  // Main
+  &-main{
+    display: flex;
+    height: calc(100vh - 50px);
+  }
+    // Aside
+    &-aside{
+      padding: 15px;
+      width: 280px;
+      flex-shrink: 0;
+      border-right: 1px solid rgba(#393939, 0.2);
+      overflow: auto;
+      &__box{
+        &:not(:first-child){
+          margin-top: 15px;
+        }
+      }
+      &__group{
+        display: flex;
+        & > *{
+          &:not(:first-child){
+            margin-left: 10px;
+          }
+        }
+      }
+      &__combo{
+        display: flex;
+        align-items: center;
+        &-label{
+          display: flex;
+          align-items: center;
+          height: 100%;
+          padding: 5px 4px 5px 8px;
+          background: rgba(#393939, 0.2);
+          font-family: 'Roboto Mono', sans-serif;
+          font-size: 12px;
+        }
+      }
+    }
+    // Content
+    &-content{
+      width: 100%;
+      padding: 10px 0 0 10px;
+      overflow: hidden;
+      &__svg{
+        display: block; /* Add this line */
+        background: rgba(#393939, 0.05);
+         width: 100%;
+        height: auto;
+        max-height: 100%;
+        &-grid{
+          opacity: 0;
+          transition: opacity 0.5s ease;
+          &--visible{
+            opacity: 1;
+          }
+        }
+      }
+    }
+  // Form elements
+  &-toggle{
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    &__checkbox{
+      display: none;
+    }
+    &__btn{
+      position: relative;
+      height: 20px;
+      width: 35px;
+      border-radius: 10px;
+      border: 1px solid #393939;
+      opacity: 0.3;
+      transition: opacity 0.5s ease, background-color 0.5s ease;
+      &::before{
+        content: "";
+        display: block;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #393939;
+        transition: transform 0.5s ease, background-color 0.5s ease;
+      }
+    }
+    &__checkbox:checked + &__btn{
+      opacity: 1;
+      background-color: #393939;
+      &::before{
+        transform: translateX(14.5px);
+        background-color: #FFFCEF;
+      }
+    }
+    &__label{
+      display: block;
+      margin-left: 5px;
+      margin-top: 2px;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+  }
+  &-label{
+    display: block;
+    text-transform: uppercase;
+    font-size: 11px;
+    line-height: 20px;
+  }
+  &-textarea{
+    display: block;
+    width: 100%;
+    height: 100px;
+    padding: 5px 7px;
+    border: 1px solid rgba(#393939, 0.2);
+    resize: none;
+    background: transparent;
+    word-break: break-all;
+    &--error{
+      border-color: #FF7F5B;
+    }
+  }
+  &-input{
+    display: block;
+    width: 100%;
+    padding: 5px 7px;
+    border: 1px solid rgba(#393939, 0.2);
+    background: transparent;
+  }
+  &-error{
+    margin-top: 5px;
+    font-size: 11px;
+    color: #FF7F5B;
+  }
+}
 </style>
